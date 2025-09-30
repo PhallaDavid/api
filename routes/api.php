@@ -4,12 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\OrderController;
 
 
 Route::post('/register', [\App\Http\Controllers\Api\UserController::class, 'register']);
 Route::post('/login', [\App\Http\Controllers\Api\UserController::class, 'login']);
 
 Route::apiResource('/products', \App\Http\Controllers\Api\ProductController::class,);
+Route::apiResource('/orders', OrderController::class);
 Route::get('/categories/{id}/products', [ProductController::class, 'getByCategory']);
 Route::apiResource('/subcategories', \App\Http\Controllers\Api\SubCategoryController::class);
 Route::apiResource('/blogs', \App\Http\Controllers\Api\BlogController::class);
