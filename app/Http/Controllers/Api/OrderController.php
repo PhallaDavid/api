@@ -47,19 +47,19 @@ class OrderController extends Controller
         }
 
         // Prepare Telegram message
-        $message = "🛒 New Order:\n";
-        $message .= "Table Number: {$order->table_number}\n";
-        $message .= "Order ID: {$order->id}\n";
-        $message .= "Items:\n";
+        $message = "🛒 ការបញ្ជាទិញថ្មី៖\n";
+        $message .= "លេខតុ: {$order->table_number}\n";
+        $message .= "ID (Order ID): {$order->id}\n";
+        $message .= "មុខម្ហូប៖\n";
 
         foreach ($request->items as $item) {
             $product = Product::find($item['product_id']);
-            $productName = $product ? $product->name : 'Unknown Product';
+            $productName = $product ? $product->name : 'មុខម្ហូបមិនស្គាល់';
             $quantity = $item['qty'];
-            $message .= "- {$productName}, Quantity: {$quantity}\n";
+            $message .= "- {$productName}, ចំនួន: {$quantity}\n";
         }
 
-        $message .= "Total Price: \${$order->total_price}\n";
+        $message .= "តម្លៃសរុប: \${$order->total_price}\n";
 
         \App\Helpers\TelegramHelper::sendMessage($message);
 
