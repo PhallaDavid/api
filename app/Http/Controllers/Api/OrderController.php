@@ -49,7 +49,7 @@ class OrderController extends Controller
         // Prepare Telegram message
         $message = "🛒 ការបញ្ជាទិញថ្មី៖\n";
         $message .= "លេខតុ: {$order->table_number}\n";
-        $message .= "ID (Order ID): {$order->id}\n";
+        $message .= "លេខរៀង: {$order->id}\n";
         $message .= "មុខម្ហូប៖\n";
 
         foreach ($request->items as $item) {
