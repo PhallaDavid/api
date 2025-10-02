@@ -8,12 +8,21 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = \App\Models\Product::with('category')->get();
+        $perPage = $request->get('row_per_page', 10); // default 10
+        $page = $request->get('page', 1);             // default 1
+
+        $products = \App\Models\Product::with('category')
+            ->paginate($perPage, ['*'], 'page', $page);
+
         return response()->json([
             'message' => 'Product index',
-            'products' => $products
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'per_page' => $products->perPage(),
+            'last_page' => $products->lastPage(),
+            'total' => $products->total(),
         ]);
     }
     public function store(Request $request)
@@ -21,7 +30,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image_url' => 'nullable|url',
+            'image' => 'nullable|file|image|max:2048', // file image
             'sku' => 'required|string|unique:products,sku',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -29,37 +38,21 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id'
         ]);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_url'] = url('storage/' . $path);
+        }
+
         $product = Product::create($validated);
+
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product
         ], 201);
     }
-    public function show($id)
-    {
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-        return response()->json($product);
-    }
-    public function getByCategory($category_id)
-    {
-        // Verify category exists
-        $category = \App\Models\Category::find($category_id);
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
 
-        // Get products
-        $products = \App\Models\Product::where('category_id', $category_id)
-            ->get();
-
-        return response()->json([
-            'category' => $category->name,
-            'products' => $products
-        ]);
-    }
     public function update(Request $request, $id)
     {
         $product = Product::find($id);
@@ -70,13 +63,19 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'image_url' => 'sometimes|nullable|url',
+            'image' => 'sometimes|file|image|max:2048',
             'sku' => 'sometimes|string|unique:products,sku,' . $id,
             'price' => 'sometimes|numeric|min:0',
             'stock' => 'sometimes|integer|min:0',
             'is_active' => 'sometimes|boolean',
             'category_id' => 'sometimes|exists:categories,id'
         ]);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_url'] = url('storage/' . $path);
+        }
 
         $product->update($validated);
         $product->load('category');
@@ -88,11 +87,45 @@ class ProductController extends Controller
     }
 
 
-    // Delete product
+
+    public function show($id)
+    {
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        return response()->json($product);
+    }
+    public function getByCategory(Request $request, $category_id)
+    {
+        $category = \App\Models\Category::find($category_id);
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+        $perPage = $request->get('row_per_page', 10);
+        $page = $request->get('page', 1);
+        $products = \App\Models\Product::where('category_id', $category_id)
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'category' => $category->name,
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'per_page' => $products->perPage(),
+            'last_page' => $products->lastPage(),
+            'total' => $products->total(),
+        ]);
+    }
+
+
+
+
+    // Delete product   
     public function destroy($id)
     {
         $product = Product::find($id);
-        if (!$product) return response()->json(['message' => 'Product not found'], 404);
+        if (!$product)
+            return response()->json(['message' => 'Product not found'], 404);
 
         $product->delete();
         return response()->json(['message' => 'Product deleted successfully']);

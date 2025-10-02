@@ -10,11 +10,20 @@ use App\Models\User;
 
 class UserController extends Controller
 {
-    // Get all users (protected)
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
-        return response()->json($users);
+        $perPage = $request->get('row_per_page', 10); // default 10
+        $page = $request->get('page', 1);             // default 1
+
+        $users = User::paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $users->items(),
+            'total' => $users->total(),
+            'current_page' => $users->currentPage(),
+            'per_page' => $users->perPage(),
+            'last_page' => $users->lastPage(),
+        ]);
     }
 
     // Register new user

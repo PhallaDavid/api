@@ -72,10 +72,17 @@ class OrderController extends Controller
 
 
     // Get all orders
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Order::with('items.product')->get());
+        $perPage = $request->get('row_per_page', 10);
+        $page = $request->get('page', 1);
+
+        $orders = Order::with('items.product')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($orders);
     }
+
 
     // Get orders by table number
     public function byTable($table)

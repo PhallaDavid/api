@@ -16,10 +16,10 @@ Route::get('/categories/{id}/products', [ProductController::class, 'getByCategor
 Route::apiResource('/subcategories', \App\Http\Controllers\Api\SubCategoryController::class);
 Route::apiResource('/blogs', \App\Http\Controllers\Api\BlogController::class);
 Route::apiResource('/categories', \App\Http\Controllers\Api\CategoryController::class);
-    // Protected routes (require Sanctum token)
+Route::get('/users', [UserController::class, 'index']);
+// Protected routes (require Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
+
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('/profile', [UserController::class, 'profile']);
-    
 });
